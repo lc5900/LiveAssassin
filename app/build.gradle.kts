@@ -29,11 +29,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            val abiList = targetAbi?.let { listOf(it) } ?: supportedAbis
-            abiFilters += abiList
-        }
     }
 
     buildTypes {
