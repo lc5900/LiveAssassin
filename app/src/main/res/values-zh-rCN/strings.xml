@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">LiveAssassin</string>
+    <string name="start_preview">开始采集</string>
+    <string name="stop_preview">停止采集</string>
+    <string name="status_waiting_device">状态：等待 USB 采集卡接入</string>
+    <string name="status_device_attached">状态：检测到设备，正在请求权限</string>
+    <string name="status_preview_running">状态：视频预览中，音频输出中</string>
+    <string name="status_preview_stopped">状态：已停止</string>
+    <string name="status_camera_open_failed">状态：相机打开失败，请检查采集卡</string>
+    <string name="status_audio_permission_denied">状态：麦克风权限未授予，音频输出不可用</string>
+    <string name="enter_fullscreen">旋转全屏</string>
+    <string name="exit_fullscreen">退出全屏</string>
+    <string name="pip_front_camera">前置 PIP</string>
+    <string name="pip_size">画中画大小</string>
+    <string name="pip_horizontal">画中画水平位置</string>
+    <string name="pip_vertical">画中画垂直位置</string>
+    <string name="pip_show_controls">展开画中画调节</string>
+    <string name="pip_hide_controls">收起画中画调节</string>
+    <string name="resolution_label">采集分辨率</string>
+    <string name="toast_usb_permission_denied">USB 权限被拒绝</string>
+    <string name="toast_no_usb_device">未检测到 USB 采集卡</string>
+    <string name="toast_enable_pip_first">请先打开前置摄像头画中画</string>
+    <string name="toast_pip_camera_start_failed">前置摄像头启动失败</string>
+    <string name="toast_audio_start_failed">音频输出启动失败</string>
+</resources>

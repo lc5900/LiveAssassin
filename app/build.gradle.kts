@@ -2,6 +2,17 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+val supportedAbis = listOf("armeabi-v7a", "arm64-v8a")
+val targetAbi = (findProperty("targetAbi") as String?)
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+
+if (targetAbi != null && targetAbi !in supportedAbis) {
+    throw GradleException(
+        "Unsupported targetAbi='$targetAbi'. Supported ABIs: ${supportedAbis.joinToString()}"
+    )
+}
+
 android {
     namespace = "com.lc5900.liveassassin"
     compileSdk {
@@ -18,6 +29,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            val abiList = targetAbi?.let { listOf(it) } ?: supportedAbis
+            abiFilters += abiList
+        }
     }
 
     buildTypes {
@@ -35,12 +51,16 @@ android {
     }
     splits {
         abi {
-            isEnable = false
+            isEnable = true
+            reset()
+            val abiList = targetAbi?.let { listOf(it) } ?: supportedAbis
+            include(*abiList.toTypedArray())
+            isUniversalApk = targetAbi == null
         }
     }
     bundle {
         abi {
-            enableSplit = false
+            enableSplit = true
         }
     }
 }

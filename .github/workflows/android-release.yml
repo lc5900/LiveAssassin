@@ -10,7 +10,49 @@ permissions:
   contents: write
 
 jobs:
-  build-release:
+  build-release-apk:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK (${{ matrix.abi }})
+        run: ./gradlew --no-daemon clean :app:assembleRelease -PtargetAbi=${{ matrix.abi }}
+
+      - name: Collect Release APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/*.apk dist/app-${{ matrix.abi }}-release.apk
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ matrix.abi }}
+          path: dist/app-${{ matrix.abi }}-release.apk
+          if-no-files-found: error
+
+      - name: Publish Release APK Asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/app-${{ matrix.abi }}-release.apk
+
+  build-release-bundle:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,23 +69,24 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Release APK and AAB
-        run: ./gradlew --no-daemon clean :app:assembleRelease :app:bundleRelease
+      - name: Build Release AAB
+        run: ./gradlew --no-daemon clean :app:bundleRelease
 
-      - name: Upload Release Artifacts
+      - name: Collect Release AAB
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/bundle/release/*.aab dist/app-release.aab
+
+      - name: Upload Release AAB Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-artifacts
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+          name: app-release-aab
+          path: dist/app-release.aab
           if-no-files-found: error
 
-      - name: Publish GitHub Release Assets
+      - name: Publish Release AAB Asset
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+          files: dist/app-release.aab
           generate_release_notes: true

@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         override fun onCancel(device: UsbDevice) {
             Log.w(TAG, "onCancel permission: $device")
             runOnUiThread {
-                Toast.makeText(this@MainActivity, "USB 权限被拒绝", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, R.string.toast_usb_permission_denied, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -338,7 +338,7 @@ class MainActivity : AppCompatActivity() {
         val monitor = usbMonitor ?: return
         val devices = monitor.deviceList
         if (devices.isNullOrEmpty()) {
-            Toast.makeText(this, "未检测到 USB 采集卡", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_no_usb_device, Toast.LENGTH_SHORT).show()
             statusView.setText(R.string.status_waiting_device)
             return
         }
@@ -524,7 +524,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun togglePipControlsPanel() {
         if (!isPipEnabled) {
-            Toast.makeText(this, "请先打开前置摄像头画中画", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_enable_pip_first, Toast.LENGTH_SHORT).show()
             return
         }
         val willShow = pipControlsPanel.visibility != View.VISIBLE
@@ -564,7 +564,7 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     pipCameraView.visibility = View.GONE
                     pipSwitch.isChecked = false
-                    Toast.makeText(this, "前置摄像头启动失败", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.toast_pip_camera_start_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }, ContextCompat.getMainExecutor(this))
@@ -640,7 +640,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (!audioLoopback.start()) {
-            Toast.makeText(this, "音频输出启动失败", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.toast_audio_start_failed, Toast.LENGTH_SHORT).show()
         }
     }
 

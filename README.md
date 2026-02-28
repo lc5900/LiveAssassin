@@ -31,6 +31,17 @@ Android USB采集卡视频/音频采集与显示项目，支持：
 - 当前 `targetSdk` 设置为 `33`，用于兼容依赖中 USB 广播注册行为。
 - 音频回放优先尝试路由到蓝牙输出设备，其次有线耳机，最后手机扬声器。
 
+## 架构与产物
+- 当前原生库支持并默认构建：`arm64-v8a`、`armeabi-v7a`。
+- 本地按单架构构建：
+  - `./gradlew :app:assembleDebug -PtargetAbi=arm64-v8a`
+  - `./gradlew :app:assembleRelease -PtargetAbi=armeabi-v7a`
+- CI 会按 ABI 分别产出 APK：
+  - `app-debug-arm64-v8a.apk`
+  - `app-debug-armeabi-v7a.apk`
+  - `app-release-arm64-v8a.apk`
+  - `app-release-armeabi-v7a.apk`
+- Release 流水线同时产出通用 `AAB`（用于应用商店分发）。
+
 ## 开源协议
 本项目采用 [Apache License 2.0](./LICENSE)。
-

@@ -15,6 +15,10 @@ permissions:
 jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a]
 
     steps:
       - name: Checkout
@@ -30,12 +34,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew --no-daemon clean :app:assembleDebug
+      - name: Build Debug APK (${{ matrix.abi }})
+        run: ./gradlew --no-daemon clean :app:assembleDebug -PtargetAbi=${{ matrix.abi }}
+
+      - name: Collect Debug APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/*.apk dist/app-${{ matrix.abi }}-debug.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-debug-${{ matrix.abi }}
+          path: dist/app-${{ matrix.abi }}-debug.apk
           if-no-files-found: error
