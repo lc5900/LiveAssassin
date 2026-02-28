@@ -16,4 +16,5 @@
     <string name="pip_vertical">画中画垂直位置</string>
     <string name="pip_show_controls">展开画中画调节</string>
     <string name="pip_hide_controls">收起画中画调节</string>
+    <string name="resolution_label">采集分辨率</string>
 </resources>

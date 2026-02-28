@@ -12,9 +12,12 @@ import android.util.Log
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.NonNull
@@ -39,20 +42,13 @@ class MainActivity : AppCompatActivity() {
     private val cameraPermissionRequest = 2000
     private val audioPermissionRequest = 2001
 
-    private val previewCandidates = arrayOf(
-        intArrayOf(1920, 1080),
-        intArrayOf(1280, 720),
-        intArrayOf(720, 576),
-        intArrayOf(720, 480),
-        intArrayOf(640, 480)
-    )
-
     private lateinit var cameraView: AspectRatioTextureView
     private lateinit var previewContainer: FrameLayout
     private lateinit var pipCameraView: PreviewView
     private lateinit var pipSwitch: SwitchCompat
     private lateinit var pipControlsPanel: View
     private lateinit var pipControlsToggleButton: Button
+    private lateinit var resolutionSpinner: Spinner
     private lateinit var controlPanel: View
     private lateinit var statusView: TextView
     private lateinit var fullscreenButton: Button
@@ -71,6 +67,9 @@ class MainActivity : AppCompatActivity() {
     private var pipYPercent = 100
     private var pipCameraProvider: ProcessCameraProvider? = null
     private var isPipEnabled = false
+    private var suppressResolutionCallback = false
+    private var selectedResolutionKey: String? = null
+    private val resolutionOptions = mutableListOf<PreviewOption>()
     private var pendingCameraPermissionForUsbOpen = false
     private var pendingCameraPermissionForPip = false
 
@@ -130,6 +129,7 @@ class MainActivity : AppCompatActivity() {
         val startButton: Button = findViewById(R.id.btn_start)
         val stopButton: Button = findViewById(R.id.btn_stop)
         fullscreenButton = findViewById(R.id.btn_fullscreen)
+        resolutionSpinner = findViewById(R.id.spinner_resolution)
         pipSwitch = findViewById(R.id.switch_pip_front_camera)
         val pipSizeSeek: SeekBar = findViewById(R.id.seek_pip_size)
         val pipXSeek: SeekBar = findViewById(R.id.seek_pip_x)
@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity() {
         pipControlsPanel = findViewById(R.id.pip_controls_panel)
         pipControlsToggleButton = findViewById(R.id.btn_toggle_pip_controls)
 
-        cameraView.setAspectRatio(previewCandidates[0][0], previewCandidates[0][1])
+        cameraView.setAspectRatio(16, 9)
         pipCameraView.scaleX = -1f
 
         cameraView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
@@ -176,6 +176,20 @@ class MainActivity : AppCompatActivity() {
             statusView.setText(R.string.status_preview_stopped)
         }
         fullscreenButton.setOnClickListener { toggleFullscreenRotate() }
+        resolutionSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (suppressResolutionCallback || position !in resolutionOptions.indices) {
+                    return
+                }
+                val option = resolutionOptions[position]
+                selectedResolutionKey = option.key
+                if (uvcCamera != null) {
+                    applyResolutionOption(option)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
         pipSwitch.setOnCheckedChangeListener { _, isChecked -> setPipEnabled(isChecked) }
         pipControlsToggleButton.setOnClickListener { togglePipControlsPanel() }
 
@@ -342,10 +356,14 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "mjpegSizes=${toSizeText(mjpeg)}")
             Log.i(TAG, "yuyvSizes=${toSizeText(yuyv)}")
 
-            val picked = chooseBestSize(mjpeg, yuyv) ?: throw IllegalStateException("no supported preview size")
-            val width = picked[0]
-            val height = picked[1]
-            val format = picked[2]
+            val options = buildResolutionOptions(mjpeg, yuyv)
+            if (options.isEmpty()) {
+                throw IllegalStateException("no supported preview size")
+            }
+            val picked = chooseResolutionOption(options)
+            val width = picked.width
+            val height = picked.height
+            val format = picked.format
             currentPreviewWidth = width
             currentPreviewHeight = height
 
@@ -359,6 +377,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread { resetPreviewTransform() }
 
             runOnUiThread {
+                updateResolutionSpinner(options, picked)
                 statusView.setText(R.string.status_preview_running)
                 startAudioIfPermitted()
                 updatePipLayout()
@@ -385,29 +404,68 @@ class MainActivity : AppCompatActivity() {
         uvcCamera?.setPreviewSize(width, height, format, 1, 30, 0.5f)
     }
 
-    private fun chooseBestSize(mjpeg: List<Size>?, yuyv: List<Size>?): IntArray? {
-        val mjpegSafe = mjpeg ?: emptyList()
-        val yuyvSafe = yuyv ?: emptyList()
-        for (candidate in previewCandidates) {
-            if (containsSize(mjpegSafe, candidate[0], candidate[1])) {
-                return intArrayOf(candidate[0], candidate[1], UVCCamera.FRAME_FORMAT_MJPEG)
+    private fun buildResolutionOptions(mjpeg: List<Size>?, yuyv: List<Size>?): List<PreviewOption> {
+        val map = linkedMapOf<String, PreviewOption>()
+        (mjpeg ?: emptyList()).forEach { s ->
+            val option = PreviewOption(s.width, s.height, UVCCamera.FRAME_FORMAT_MJPEG)
+            map[option.key] = option
+        }
+        (yuyv ?: emptyList()).forEach { s ->
+            val option = PreviewOption(s.width, s.height, UVCCamera.FRAME_FORMAT_YUYV)
+            if (!map.containsKey(option.key)) {
+                map[option.key] = option
             }
         }
-        for (candidate in previewCandidates) {
-            if (containsSize(yuyvSafe, candidate[0], candidate[1])) {
-                return intArrayOf(candidate[0], candidate[1], UVCCamera.FRAME_FORMAT_YUYV)
-            }
-        }
-        return null
+        return map.values.sortedWith(
+            compareByDescending<PreviewOption> { it.width * it.height }
+                .thenByDescending { it.width }
+        )
     }
 
-    private fun containsSize(list: List<Size>, width: Int, height: Int): Boolean {
-        for (size in list) {
-            if (size.width == width && size.height == height) {
-                return true
-            }
+    private fun chooseResolutionOption(options: List<PreviewOption>): PreviewOption {
+        val selected = selectedResolutionKey
+        if (selected != null) {
+            options.firstOrNull { it.key == selected }?.let { return it }
         }
-        return false
+        return options.first()
+    }
+
+    private fun updateResolutionSpinner(options: List<PreviewOption>, selected: PreviewOption) {
+        resolutionOptions.clear()
+        resolutionOptions.addAll(options)
+        val labels = options.map { it.label }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, labels).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        suppressResolutionCallback = true
+        resolutionSpinner.adapter = adapter
+        val selectedIndex = options.indexOfFirst { it.key == selected.key }.coerceAtLeast(0)
+        resolutionSpinner.setSelection(selectedIndex, false)
+        suppressResolutionCallback = false
+        selectedResolutionKey = selected.key
+    }
+
+    private fun applyResolutionOption(option: PreviewOption) {
+        val camera = uvcCamera ?: return
+        try {
+            camera.stopPreview()
+        } catch (_: Exception) {
+        }
+        try {
+            currentPreviewWidth = option.width
+            currentPreviewHeight = option.height
+            applyAspectForCurrentOrientation()
+            trySetPreviewSize(option.width, option.height, option.format)
+            val texture = cameraView.surfaceTexture ?: throw IllegalStateException("camera view surface is null")
+            texture.setDefaultBufferSize(option.width, option.height)
+            camera.setPreviewTexture(texture)
+            camera.startPreview()
+            resetPreviewTransform()
+            statusView.text = getString(R.string.status_preview_running) + " (${option.label})"
+        } catch (e: Exception) {
+            Log.e(TAG, "applyResolutionOption failed", e)
+            statusView.setText(R.string.status_camera_open_failed)
+        }
     }
 
     private fun toSizeText(sizes: List<Size>?): String {
@@ -619,5 +677,9 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "LiveAssassin"
     }
-}
 
+    private data class PreviewOption(val width: Int, val height: Int, val format: Int) {
+        val key: String = "${width}x$height"
+        val label: String = "${width}x$height"
+    }
+}

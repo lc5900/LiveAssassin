@@ -86,6 +86,22 @@
             android:text="@string/enter_fullscreen"
             android:textSize="12sp" />
 
+        <TextView
+            android:id="@+id/tv_resolution"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/resolution_label"
+            android:textColor="@android:color/white"
+            android:textSize="11sp" />
+
+        <Spinner
+            android:id="@+id/spinner_resolution"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:layout_marginTop="4dp"
+            android:background="@android:color/white" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switch_pip_front_camera"
             android:layout_width="match_parent"
