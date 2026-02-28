@@ -1,47 +1,49 @@
 # LiveAssassin
 
-Android USB采集卡视频/音频采集与显示项目，支持：
-- USB采集卡视频预览（UVC）
-- USB采集卡音频回放
-- 全屏沉浸模式
-- 前置摄像头画中画（PIP）叠加，可调位置和大小
+[中文说明 (Simplified Chinese)](./README.zh-CN.md)
 
-## 环境要求
-- Android Studio (Hedgehog 及以上推荐)
+Android USB capture-card video/audio preview app with:
+- USB capture-card video preview (UVC)
+- USB capture-card audio loopback playback
+- Fullscreen immersive mode
+- Front-camera picture-in-picture (PIP) overlay with adjustable position and size
+
+## Requirements
+- Android Studio (Hedgehog or newer recommended)
 - JDK 11
-- Android 手机支持 OTG / USB Host
-- USB 视频采集卡（UVC）
+- Android phone with OTG / USB Host support
+- UVC-compatible USB capture card
 
-## 构建与运行
-1. 使用 Android Studio 打开项目。
-2. 首次构建会自动下载依赖（需要联网）。
-3. 连接手机并运行 `app` 模块。
-4. 给应用授权：
-   - 相机权限
-   - 麦克风权限
-   - USB 设备权限（弹窗）
+## Build & Run
+1. Open the project in Android Studio.
+2. Build once to download dependencies (internet required).
+3. Connect your phone and run the `app` module.
+4. Grant app permissions:
+   - Camera
+   - Microphone
+   - USB device access (system prompt)
 
-## 使用说明
-1. 将采集卡通过 OTG 连接手机。
-2. 点击 `开始采集`。
-3. 需要全屏时点击 `旋转全屏`，点击预览区域可隐藏/显示悬浮控制。
-4. 若需要前置摄像头叠加，打开 `前置摄像头画中画`，并通过滑条调整位置/大小。
+## Usage
+1. Connect the capture card to the phone via OTG.
+2. Tap `Start Capture`.
+3. Tap `Rotate Fullscreen` for immersive view; tap preview area to hide/show floating controls.
+4. Enable `Front PIP` for front-camera overlay and adjust size/position with sliders.
 
-## 重要说明
-- 当前 `targetSdk` 设置为 `33`，用于兼容依赖中 USB 广播注册行为。
-- 音频回放优先尝试路由到蓝牙输出设备，其次有线耳机，最后手机扬声器。
+## Notes
+- `targetSdk` is currently set to `33` for compatibility with USB broadcast registration behavior in upstream dependencies.
+- Audio output routing priority: Bluetooth output device, then wired headset, then phone speaker.
 
-## 架构与产物
-- 当前原生库支持并默认构建：`arm64-v8a`、`armeabi-v7a`。
-- 本地按单架构构建：
+## ABIs & Artifacts
+- Supported native ABIs by default: `arm64-v8a`, `armeabi-v7a`.
+- Build a single ABI locally:
   - `./gradlew :app:assembleDebug -PtargetAbi=arm64-v8a`
   - `./gradlew :app:assembleRelease -PtargetAbi=armeabi-v7a`
-- CI 会按 ABI 分别产出 APK：
+- CI generates per-ABI APKs:
   - `app-debug-arm64-v8a.apk`
   - `app-debug-armeabi-v7a.apk`
   - `app-release-arm64-v8a.apk`
   - `app-release-armeabi-v7a.apk`
-- Release 流水线同时产出通用 `AAB`（用于应用商店分发）。
+- Release workflow also generates a universal `AAB` (for store distribution).
 
-## 开源协议
-本项目采用 [Apache License 2.0](./LICENSE)。
+## License
+Licensed under [Apache License 2.0](./LICENSE).
