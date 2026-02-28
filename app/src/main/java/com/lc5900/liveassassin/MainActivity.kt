@@ -255,7 +255,7 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         applyAspectForCurrentOrientation()
         resetPreviewTransform()
-        updatePipLayout()
+        schedulePipRelayout()
         if (isFullscreenMode) {
             enterImmersiveMode()
         }
@@ -274,6 +274,7 @@ class MainActivity : AppCompatActivity() {
             setChromeHidden(false)
             fullscreenButton.setText(R.string.enter_fullscreen)
         }
+        schedulePipRelayout()
     }
 
     private fun setChromeHidden(hidden: Boolean) {
@@ -434,8 +435,8 @@ class MainActivity : AppCompatActivity() {
         resolutionOptions.clear()
         resolutionOptions.addAll(options)
         val labels = options.map { it.label }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, labels).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val adapter = ArrayAdapter(this, R.layout.item_spinner_resolution, labels).apply {
+            setDropDownViewResource(R.layout.item_spinner_resolution_dropdown)
         }
         suppressResolutionCallback = true
         resolutionSpinner.adapter = adapter
@@ -583,14 +584,29 @@ class MainActivity : AppCompatActivity() {
             previewContainer.post { updatePipLayout() }
             return
         }
+
         var pipW = maxOf(120, containerW * pipSizePercent / 100)
         var pipH = maxOf(68, pipW * 9 / 16)
+        if (pipW > containerW) {
+            pipW = containerW
+            pipH = maxOf(1, pipW * 9 / 16)
+        }
         if (pipH > containerH) {
             pipH = containerH
-            pipW = maxOf(120, pipH * 16 / 9)
+            pipW = maxOf(1, pipH * 16 / 9)
         }
-        val left = (containerW - pipW) * pipXPercent / 100
-        val top = (containerH - pipH) * pipYPercent / 100
+        if (pipW > containerW) {
+            pipW = containerW
+        }
+        if (pipH > containerH) {
+            pipH = containerH
+        }
+
+        val maxLeft = maxOf(0, containerW - pipW)
+        val maxTop = maxOf(0, containerH - pipH)
+        val left = ((maxLeft * pipXPercent) / 100).coerceIn(0, maxLeft)
+        val top = ((maxTop * pipYPercent) / 100).coerceIn(0, maxTop)
+
         val lp = pipCameraView.layoutParams as FrameLayout.LayoutParams
         lp.gravity = Gravity.TOP or Gravity.START
         lp.width = pipW
@@ -600,6 +616,14 @@ class MainActivity : AppCompatActivity() {
         lp.marginStart = left
         pipCameraView.layoutParams = lp
         pipCameraView.bringToFront()
+    }
+
+    private fun schedulePipRelayout() {
+        if (!isPipEnabled || pipCameraView.visibility != View.VISIBLE) {
+            return
+        }
+        previewContainer.post { updatePipLayout() }
+        previewContainer.postDelayed({ updatePipLayout() }, 120L)
     }
 
     private fun clamp(value: Int, min: Int, max: Int): Int = maxOf(min, minOf(max, value))

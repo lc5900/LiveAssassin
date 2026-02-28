@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="la_primary">#1E8E7D</color>
+    <color name="la_primary_dark">#146659</color>
+    <color name="la_accent">#3BCFB4</color>
+    <color name="la_accent_pressed">#2AB39A</color>
+    <color name="la_danger">#D95C5C</color>
+    <color name="la_danger_pressed">#BF4747</color>
+    <color name="la_surface_glass">#66121A22</color>
+    <color name="la_surface_glass_strong">#990D141C</color>
+    <color name="la_outline">#44FFFFFF</color>
+    <color name="la_text_primary">#F2FFFFFF</color>
+    <color name="la_text_secondary">#C4FFFFFF</color>
+    <color name="la_spinner_bg">#F0F4F8</color>
+    <color name="la_black">#000000</color>
+    <color name="la_white">#FFFFFF</color>
 </resources>

@@ -10,7 +10,7 @@
     <string name="status_audio_permission_denied">状态：麦克风权限未授予，音频输出不可用</string>
     <string name="enter_fullscreen">旋转全屏</string>
     <string name="exit_fullscreen">退出全屏</string>
-    <string name="pip_front_camera">前置摄像头画中画</string>
+    <string name="pip_front_camera">前置 PIP</string>
     <string name="pip_size">画中画大小</string>
     <string name="pip_horizontal">画中画水平位置</string>
     <string name="pip_vertical">画中画垂直位置</string>

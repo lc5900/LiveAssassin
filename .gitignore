@@ -17,3 +17,4 @@ local.properties
 .gradle-user-home/
 *.apk
 *.aab
+.gradle-user/
